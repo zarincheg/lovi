@@ -115,8 +115,12 @@ Lovi.CompleteLoader = (function() {
 			});
 
 			$.when.apply($, resources).done(function() {
-				for(var i = 0; i < arguments.length; i++) {
-					Loader.map[i].block.update(arguments[i][0]);
+				if(arguments[0] instanceof Array) {
+					for(var i = 0; i < arguments.length; i++) {
+						map[i].block.update(arguments[i][0]);
+					}
+				} else {
+					map[0].block.update(arguments[0]);
 				}
 			});
 		}
