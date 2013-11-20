@@ -23,7 +23,7 @@ Lovi.Req = (function(){
 			this.options[o] = Lovi.settings.req.options[o];
 		}
 
-		for(var o in this.options) {
+		for(var o in options) {
 			this.options[o] = options[o];
 		}
 
