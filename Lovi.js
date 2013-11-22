@@ -100,13 +100,29 @@ Lovi.CompleteLoader = (function() {
 
 	Loader.prototype = {
 		bind: function(url, block) {
-			if(!url || !block) throw "Two arguments expected";
-			if(!(block instanceof Lovi.Block)) throw "Second argument must be a Block object";
+			if(!arguments.length) throw "Nothing to bind. URL and related Block object expected.";
 
-			this.map.push({
-				block: block,
-				url: url
-			});
+			var args = [].slice.call(arguments);
+			var bindList = [];
+
+			if(typeof args[0] === "string" && (args[1] instanceof Lovi.Block)) {
+				bindList.push([args[0], args[1]]);
+			} else if(args[0] instanceof Array) {
+				bindList = args;
+			}
+
+			for(var i = 0; i < bindList.length; i++) {
+				if(bindList[i].length != 2 || !(bindList[i][1] instanceof Lovi.Block) || typeof bindList[i][0] !== "string") {
+					continue;
+				}
+
+				this.map.push({
+					block: bindList[i][1],
+					url: bindList[i][0]
+				});
+			}
+
+			if(!this.map.length) throw "Relations map is empty. Incorrect bind parameters."
 		},
 
 		load: function() {
