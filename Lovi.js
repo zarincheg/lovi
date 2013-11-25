@@ -1,3 +1,11 @@
+/**
+ * @todo Binding maps - it is presets for loading from bunch of URLs and for multiple usage by simple way
+ * @todo Multiple blocks for same URL bindings
+ * @todo QueueLoader and FastLoader
+ * @todo data cache
+ * @todo Default request(Req) options for loader instance
+ */
+
 var Lovi = Lovi || {};
 
 Lovi.settings = {
@@ -41,6 +49,20 @@ Lovi.Req = (function(){
 			}
 
 			return url;
+		},
+
+		res: function(resource) {
+			this.setOptions({
+				resource: resource
+			});
+
+			return new Lovi.Req(this.options);
+		},
+
+		setOptions: function(options) {
+			for(var o in options) {
+				this.options[o] = options[o];
+			}
 		}
 	}
 
@@ -99,26 +121,26 @@ Lovi.CompleteLoader = (function() {
 	}
 
 	Loader.prototype = {
-		bind: function(url, block) {
+		bind: function() {
 			if(!arguments.length) throw "Nothing to bind. URL and related Block object expected.";
 
 			var args = [].slice.call(arguments);
 			var bindList = [];
 
-			if(typeof args[0] === "string" && (args[1] instanceof Lovi.Block)) {
+			if((args[0] instanceof Lovi.Req) && (args[1] instanceof Lovi.Block)) {
 				bindList.push([args[0], args[1]]);
 			} else if(args[0] instanceof Array) {
 				bindList = args;
 			}
 
 			for(var i = 0; i < bindList.length; i++) {
-				if(bindList[i].length != 2 || !(bindList[i][1] instanceof Lovi.Block) || typeof bindList[i][0] !== "string") {
+				if(bindList[i].length != 2 || !(bindList[i][1] instanceof Lovi.Block) || !(bindList[i][0] instanceof Lovi.Req)) {
 					continue;
 				}
 
 				this.map.push({
 					block: bindList[i][1],
-					url: bindList[i][0]
+					req: bindList[i][0]
 				});
 			}
 
@@ -127,8 +149,9 @@ Lovi.CompleteLoader = (function() {
 
 		load: function() {
 			var resources = $.map(this.map, function(item) {
-				return $.get(item.url);
+				return $.get(item.req.url());
 			});
+			var map = this.map;
 
 			$.when.apply($, resources).done(function() {
 				if(arguments[0] instanceof Array) {
@@ -139,6 +162,14 @@ Lovi.CompleteLoader = (function() {
 					map[0].block.update(arguments[0]);
 				}
 			});
+		},
+
+		each: function(callback) {
+			this.map.forEach(function(v, i, a) {
+				a[i] = callback(v);
+			});
+
+			return this;
 		}
 	}
 
